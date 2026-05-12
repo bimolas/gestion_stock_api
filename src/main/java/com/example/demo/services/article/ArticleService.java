@@ -13,6 +13,10 @@ import com.example.demo.models.Supplier;
 import com.example.demo.repositories.ArticleRepository;
 import com.example.demo.repositories.CategoryRepository;
 import com.example.demo.repositories.SupplierRepository;
+import com.example.demo.services.alert.IAlertService;
+import com.example.demo.services.notification.NotificationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class ArticleService implements IArticleService {
@@ -23,13 +27,20 @@ public class ArticleService implements IArticleService {
     private final CategoryRepository categoryRepository;
     @Autowired
     private final SupplierRepository supplierRepository;
+    private final IAlertService alertService;
+    private final NotificationService notificationService;
+    private static final Logger logger = LoggerFactory.getLogger(ArticleService.class);
 
     public ArticleService(SupplierRepository supplierRepository,
                           ArticleRepository articleRepository,
-                          CategoryRepository categoryRepository) {
+                          CategoryRepository categoryRepository,
+                          IAlertService alertService,
+                          NotificationService notificationService) {
         this.articleRepository = articleRepository;
         this.categoryRepository = categoryRepository;
         this.supplierRepository = supplierRepository;
+        this.alertService = alertService;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -48,7 +59,20 @@ public class ArticleService implements IArticleService {
         article.setPrice(createArticleDto.getPrice());
         article.setQuantity(createArticleDto.getQuantity());
 
-        return articleRepository.save(article);
+        Article savedArticle = articleRepository.save(article);
+        
+        try {
+            alertService.evaluateAndCreateForArticle(savedArticle);
+        } catch (Exception ex) {
+            logger.warn("Alert evaluation failed for articleId={}", savedArticle.getId(), ex);
+        }
+        try {
+            notificationService.logStockMovement(savedArticle.getId(), savedArticle.getQuantity(), "CREATION");
+        } catch (Exception ex) {
+            logger.warn("Traceability message creation failed for articleId={}", savedArticle.getId(), ex);
+        }
+        
+        return savedArticle;
     }
 
     @Override
@@ -59,7 +83,20 @@ public class ArticleService implements IArticleService {
         article.setPrice(updateArticleDto.getPrice());
         article.setQuantity(updateArticleDto.getQuantity());
 
-        return articleRepository.save(article);
+        Article savedArticle = articleRepository.save(article);
+        
+        try {
+            alertService.evaluateAndCreateForArticle(savedArticle);
+        } catch (Exception ex) {
+            logger.warn("Alert evaluation failed for articleId={}", savedArticle.getId(), ex);
+        }
+        try {
+            notificationService.logStockMovement(savedArticle.getId(), savedArticle.getQuantity(), "UPDATE");
+        } catch (Exception ex) {
+            logger.warn("Traceability message creation failed for articleId={}", savedArticle.getId(), ex);
+        }
+        
+        return savedArticle;
     }
 
     @Override
@@ -77,5 +114,10 @@ public class ArticleService implements IArticleService {
     public List<Article> getAllArticlesBySupplier(Long id) {
         Supplier supplier = supplierRepository.findById(id).orElseThrow();
         return articleRepository.findBySupplier(supplier);
+    }
+
+    @Override
+    public Article getArticleById(Long id) {
+        return articleRepository.findById(id).orElseThrow();
     }
 }

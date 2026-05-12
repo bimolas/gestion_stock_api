@@ -11,6 +11,7 @@ import com.example.demo.repositories.CategoryRepository;
 import com.example.demo.repositories.StockEntryRepository;
 import com.example.demo.repositories.StockExitRepository;
 import com.example.demo.repositories.SupplierRepository;
+import com.example.demo.services.analytics.AnalyticsService;
 
 import java.util.*;
 
@@ -25,15 +26,17 @@ public class StockDashboardService implements IStockDashboardService {
     private final ArticleRepository articleRepository;
     @Autowired
     private final CategoryRepository categoryRepository;
+    private final AnalyticsService analyticsService;
 
     public StockDashboardService(StockExitRepository stockExitRepository, ArticleRepository articleRepository,
             StockEntryRepository stockEntryRepository, CategoryRepository categoryRepository,
-            SupplierRepository SupplierRepository) {
+            SupplierRepository SupplierRepository, AnalyticsService analyticsService) {
         this.SupplierRepository = SupplierRepository;
         this.articleRepository = articleRepository;
         this.categoryRepository = categoryRepository;
         this.stockEntryRepository = stockEntryRepository;
         this.stockExitRepository = stockExitRepository;
+        this.analyticsService = analyticsService;
     }
 
     @Override
@@ -72,5 +75,10 @@ public class StockDashboardService implements IStockDashboardService {
         }
 
         return progressDTOs;
+    }
+
+    @Override
+    public List<Object> getArticleHistory(Long id) {
+        return analyticsService.getArticleHistory(id);
     }
 }

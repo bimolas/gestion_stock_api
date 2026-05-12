@@ -33,6 +33,11 @@ public class ArticleController {
         return ResponseEntity.ok(articleService.getAllArticles());
     }
 
+    @GetMapping("GetArticleById/{id}")
+    public ResponseEntity<Article> getArticleById(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(articleService.getArticleById(id));
+    }
+
     @GetMapping("GetArticlesByCategory/{id}")
     public ResponseEntity<List<Article>> getArticlesByCategory(@PathVariable("id") Long id) {
         return ResponseEntity.ok(articleService.getAllArticlesByCategory(id));

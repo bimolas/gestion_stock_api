@@ -12,4 +12,6 @@ public interface IStockDashboardService {
     List<StockEntryProgressDto> getStockEntryProgress();
 
     List<StockExitProgressDto> getStockExitProgress();
+
+    List<Object> getArticleHistory(Long id);
 }

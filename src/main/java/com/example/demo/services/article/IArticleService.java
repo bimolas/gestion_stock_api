@@ -12,4 +12,5 @@ public interface IArticleService {
     List<Article> getAllArticles();
     List<Article> getAllArticlesByCategory(Long id);
     List<Article> getAllArticlesBySupplier(Long id);
+    Article getArticleById(Long id);
 }

@@ -2,7 +2,10 @@ package com.example.demo.services.stockentry;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.dtos.stockentry.CreateStockEntryDto;
 import com.example.demo.dtos.stockentry.UpdateStockEntryDto;
@@ -13,27 +16,34 @@ import com.example.demo.repositories.ArticleRepository;
 import com.example.demo.repositories.StockEntryRepository;
 import com.example.demo.repositories.SupplierRepository;
 import com.example.demo.services.alert.IAlertService;
+import com.example.demo.services.notification.NotificationService;
 
 @Service
 public class StockEntryService implements IStockEntryService {
+
+    private static final Logger logger = LoggerFactory.getLogger(StockEntryService.class);
 
     private final ArticleRepository articleRepository;
     private final StockEntryRepository stockEntryRepository;
     private final SupplierRepository supplierRepository;
     private final IAlertService alertService;
+    private final NotificationService notificationService;
 
     public StockEntryService(
             ArticleRepository articleRepository,
             StockEntryRepository stockEntryRepository,
             SupplierRepository supplierRepository,
-            IAlertService alertService) {
+            IAlertService alertService,
+            NotificationService notificationService) {
         this.articleRepository = articleRepository;
         this.stockEntryRepository = stockEntryRepository;
         this.supplierRepository = supplierRepository;
         this.alertService = alertService;
+        this.notificationService = notificationService;
     }
 
     @Override
+    @Transactional
     public StockEntry createStockEntry(CreateStockEntryDto createDto) {
         StockEntry stockEntry = new StockEntry();
         stockEntry.setDate(createDto.getDate());
@@ -49,7 +59,16 @@ public class StockEntryService implements IStockEntryService {
         stockEntry.setSupplier(supplier);
 
         StockEntry savedStockEntry = stockEntryRepository.save(stockEntry);
-        alertService.evaluateAndCreateForArticle(article);
+        try {
+            alertService.evaluateAndCreateForArticle(article);
+        } catch (Exception ex) {
+            logger.warn("Alert evaluation failed for articleId={}", article.getId(), ex);
+        }
+        try {
+            notificationService.logStockMovement(article.getId(), createDto.getQuantity(), "ENTRY");
+        } catch (Exception ex) {
+            logger.warn("Traceability message creation failed for articleId={}", article.getId(), ex);
+        }
         return savedStockEntry;
     }
 

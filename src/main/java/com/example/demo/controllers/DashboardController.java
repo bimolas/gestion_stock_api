@@ -10,6 +10,7 @@ import com.example.demo.dtos.dashboard.DashboardStats;
 import com.example.demo.dtos.dashboard.StockExitProgressDto;
 import com.example.demo.services.dashboard.IStockDashboardService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import java.util.List;
 
 @RestController
@@ -36,5 +37,10 @@ public class DashboardController {
     @GetMapping("GetExitProgress")
     public ResponseEntity<List<StockExitProgressDto>> getExitProgress() {
         return ResponseEntity.ok(dashboardService.getStockExitProgress());
+    }
+
+    @GetMapping("GetArticleHistory/{id}")
+    public ResponseEntity<List<Object>> getArticleHistory(@PathVariable Long id) {
+        return ResponseEntity.ok(dashboardService.getArticleHistory(id));
     }
 }
