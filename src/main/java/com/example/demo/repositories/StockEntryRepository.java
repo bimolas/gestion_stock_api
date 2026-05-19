@@ -16,21 +16,15 @@ public interface StockEntryRepository extends JpaRepository<StockEntry, Long> {
     StockEntry findTopByArticleAndSupplierOrderByDateDesc(Article article, Supplier supplier);
 
     @Query(value = """
-            WITH LastFiveMonths AS (
-                SELECT
-                    DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month' * generate_series(0, 4) AS month_start
-            )
             SELECT
-                to_char(month_start, 'YYYY-MM') AS month,
+                DATE_FORMAT(e.date, '%Y-%m') AS month,
                 COALESCE(SUM(e.quantity), 0) AS totalQuantity
             FROM
-                LastFiveMonths m
-            LEFT JOIN
-                stock_entry e ON DATE_TRUNC('month', e.date) = m.month_start
+                stock_entry e
             GROUP BY
-                month_start
+                DATE_FORMAT(e.date, '%Y-%m')
             ORDER BY
-                month_start;
+                month ASC
             """, nativeQuery = true)
     List<Object[]> getStockEntryProgress();
 }

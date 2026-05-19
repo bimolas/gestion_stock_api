@@ -27,10 +27,22 @@ public class NotificationService {
             message.setContent(
                     "Movement=" + movementType + " | ArticleId=" + articleId + " | Quantity=" + quantity);
             message.setRead(false);
-
             messageRepository.save(message);
         } catch (Exception ex) {
             logger.warn("Message creation failed for articleId={} movementType={}", articleId, movementType, ex);
+        }
+    }
+
+    @Transactional
+    public void logAction(String title, String content) {
+        try {
+            Message message = new Message();
+            message.setTitle(title);
+            message.setContent(content);
+            message.setRead(false);
+            messageRepository.save(message);
+        } catch (Exception ex) {
+            logger.warn("Action message creation failed: title={}", title, ex);
         }
     }
 }

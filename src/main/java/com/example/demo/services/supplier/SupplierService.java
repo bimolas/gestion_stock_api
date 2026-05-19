@@ -9,14 +9,17 @@ import com.example.demo.dtos.supplier.CreateSupplierDto;
 import com.example.demo.dtos.supplier.UpdateSupplierDto;
 import com.example.demo.models.Supplier;
 import com.example.demo.repositories.SupplierRepository;
+import com.example.demo.services.notification.NotificationService;
 
 @Service
 public class SupplierService implements ISupplierService {
     @Autowired
     private final SupplierRepository supplierRepository;
+    private final NotificationService notificationService;
 
-    public SupplierService(SupplierRepository supplierRepository) {
+    public SupplierService(SupplierRepository supplierRepository, NotificationService notificationService) {
         this.supplierRepository = supplierRepository;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -26,7 +29,11 @@ public class SupplierService implements ISupplierService {
         supplier.setAddress(createDto.getAddress());
         supplier.setContact(createDto.getContact());
         supplier.setPhone(createDto.getPhone());
-        return supplierRepository.save(supplier);
+        Supplier saved = supplierRepository.save(supplier);
+        try {
+            notificationService.logAction("Supplier Onboarded", "Supplier '" + saved.getName() + "' was added to the network (ID: " + saved.getId() + ").");
+        } catch (Exception ignored) {}
+        return saved;
     }
 
     @Override
@@ -36,7 +43,11 @@ public class SupplierService implements ISupplierService {
         supplier.setAddress(updateDto.getAddress());
         supplier.setContact(updateDto.getContact());
         supplier.setPhone(updateDto.getPhone());
-        return supplierRepository.save(supplier);
+        Supplier saved = supplierRepository.save(supplier);
+        try {
+            notificationService.logAction("Supplier Updated", "Supplier '" + saved.getName() + "' profile was updated (ID: " + saved.getId() + ").");
+        } catch (Exception ignored) {}
+        return saved;
     }
 
     @Override
